@@ -1,0 +1,307 @@
+/* ================================================================
+   DocMind — Custom Theme
+   All design tokens and component styles for the Streamlit app.
+   Import via inject_custom_css() in app.py.
+   ================================================================ */
+
+/* ── Google Fonts ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* ── Design tokens ────────────────────────────────────────────────── */
+:root {
+    --bg-base:        #0f0f0f;
+    --bg-surface:     #181818;
+    --bg-elevated:    #212121;
+    --border:         #2a2a2a;
+    --border-active:  #d97706;
+    --accent:         #d97706;
+    --accent-dim:     #92400e;
+    --text-primary:   #f0ebe0;
+    --text-secondary: #9e9480;
+    --text-muted:     #5a5448;
+    --user-bubble:    #1c1c1c;
+    --ai-bubble:      #161610;
+    --radius:         10px;
+    --font-display:   'Playfair Display', serif;
+    --font-body:      'DM Sans', sans-serif;
+    --font-mono:      'JetBrains Mono', monospace;
+}
+
+/* ── Global reset ─────────────────────────────────────────────────── */
+html, body, [data-testid="stAppViewContainer"],
+[data-testid="stApp"] {
+    background-color: var(--bg-base) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-body) !important;
+}
+
+/* ── Hide Streamlit chrome ────────────────────────────────────────── */
+#MainMenu, footer, header { visibility: hidden; }
+[data-testid="stDecoration"] { display: none; }
+
+/* ── Main content block ───────────────────────────────────────────── */
+.block-container {
+    padding: 2.5rem 2rem 4rem !important;
+    max-width: 780px !important;
+}
+
+/* ── App header / wordmark ────────────────────────────────────────── */
+.app-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.25rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--border);
+}
+.app-header .wordmark {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+.app-header .wordmark span {
+    color: var(--accent);
+}
+.app-header .tagline {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ── Upload zone ──────────────────────────────────────────────────── */
+[data-testid="stFileUploader"] {
+    background: var(--bg-surface) !important;
+    border: 1.5px dashed var(--border) !important;
+    border-radius: var(--radius) !important;
+    padding: 1.2rem !important;
+    transition: border-color 0.2s;
+}
+[data-testid="stFileUploader"]:hover {
+    border-color: var(--accent) !important;
+}
+[data-testid="stFileUploader"] label,
+[data-testid="stFileUploader"] p,
+[data-testid="stFileUploader"] span {
+    color: var(--text-secondary) !important;
+    font-family: var(--font-body) !important;
+}
+
+/* Hide Streamlit's auto-generated "200MB per file • PDF" helper text */
+[data-testid="stFileUploaderDropzoneInstructions"] > div > span,
+[data-testid="stFileUploaderDropzoneInstructions"] > div > small {
+    display: none !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] > div::after {
+    content: "Drag & drop or click to browse";
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+}
+
+/* ── Chat messages ────────────────────────────────────────────────── */
+[data-testid="stChatMessage"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0.6rem 0 !important;
+}
+
+/* User bubble */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+    background: var(--user-bubble) !important;
+    border-radius: var(--radius) !important;
+    border: 1px solid var(--border) !important;
+    padding: 0.8rem 1rem !important;
+}
+
+/* Assistant bubble */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    background: var(--ai-bubble) !important;
+    border-radius: var(--radius) !important;
+    border-left: 3px solid var(--accent) !important;
+    padding: 0.8rem 1rem !important;
+}
+
+/* Chat text */
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] li,
+[data-testid="stChatMessage"] td {
+    font-family: var(--font-body) !important;
+    font-size: 0.93rem !important;
+    line-height: 1.7 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Code inside chat */
+[data-testid="stChatMessage"] code {
+    font-family: var(--font-mono) !important;
+    font-size: 0.82rem !important;
+    background: var(--bg-elevated) !important;
+    color: var(--accent) !important;
+    padding: 0.15em 0.4em !important;
+    border-radius: 4px !important;
+}
+
+/* ── Chat input bar ───────────────────────────────────────────────── */
+[data-testid="stChatInput"] {
+    background: var(--bg-surface) !important;
+    border: 1.5px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    padding: 0.5rem 1rem !important;
+    transition: border-color 0.2s;
+}
+[data-testid="stChatInput"]:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.12) !important;
+}
+/* Target every possible selector Streamlit uses for the input text */
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] textarea:focus,
+[data-testid="stChatInput"] div,
+[data-testid="stChatInput"] p,
+[data-testid="stChatInputContainer"] textarea,
+[data-testid="stChatInputContainer"] textarea:focus,
+.stChatInput textarea,
+.stChatInputContainer textarea {
+    font-family: var(--font-body) !important;
+    font-size: 0.93rem !important;
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    background: transparent !important;
+    caret-color: var(--accent) !important;
+}
+[data-testid="stChatInput"] textarea::placeholder,
+[data-testid="stChatInputContainer"] textarea::placeholder {
+    color: var(--text-muted) !important;
+    -webkit-text-fill-color: var(--text-muted) !important;
+}
+
+/* ── Alerts & banners ─────────────────────────────────────────────── */
+[data-testid="stAlert"] {
+    border-radius: var(--radius) !important;
+    font-family: var(--font-body) !important;
+    font-size: 0.88rem !important;
+}
+
+/* ── Spinner ──────────────────────────────────────────────────────── */
+[data-testid="stSpinner"] p {
+    font-family: var(--font-mono) !important;
+    font-size: 0.8rem !important;
+    color: var(--text-muted) !important;
+    letter-spacing: 0.05em;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: var(--bg-surface) !important;
+    border-right: 1px solid var(--border) !important;
+}
+[data-testid="stSidebar"] * {
+    font-family: var(--font-body) !important;
+}
+[data-testid="stSidebar"] .sidebar-section-title {
+    font-family: var(--font-mono) !important;
+    font-size: 0.68rem !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+    padding: 1.2rem 0 0.5rem !important;
+}
+[data-testid="stSidebar"] hr {
+    border-color: var(--border) !important;
+    margin: 0.8rem 0 !important;
+}
+
+/* ── Sidebar buttons ──────────────────────────────────────────────── */
+[data-testid="stSidebar"] button {
+    background: var(--bg-elevated) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    font-family: var(--font-body) !important;
+    font-size: 0.85rem !important;
+    font-weight: 400 !important;
+    transition: all 0.15s !important;
+}
+[data-testid="stSidebar"] button:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: rgba(217,119,6,0.08) !important;
+}
+
+/* ── Model badge in sidebar ───────────────────────────────────────── */
+.model-badge {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.4rem;
+    margin-bottom: 1rem;
+}
+.model-badge .label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.model-badge .value {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-top: 0.15rem;
+}
+.model-badge .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #16a34a;
+    border-radius: 50%;
+    margin-right: 0.4rem;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+/* ── Welcome card ─────────────────────────────────────────────────── */
+.welcome-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.6rem 2rem;
+    margin-top: 1.2rem;
+}
+.welcome-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin: 0 0 0.8rem 0;
+}
+.welcome-card ol {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 2;
+    padding-left: 1.2rem;
+    margin: 0 0 1rem 0;
+}
+.welcome-card .features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.welcome-card .badge {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}

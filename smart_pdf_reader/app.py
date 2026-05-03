@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -12,30 +14,62 @@ load_dotenv()
 
 def configure_page() -> None:
     st.set_page_config(
-        page_title="PDF Document Tutor",
-        page_icon="📚",
+        page_title="SmartDocReader — PDF Tutor",
+        page_icon="📖",
         layout="centered",
+        initial_sidebar_state="expanded",
     )
+
+
+def inject_custom_css() -> None:
+    """
+    Reads styles.css from the project root and injects it into the page.
+
+    Keeping CSS in a dedicated file means:
+    - IDE syntax highlighting and linting works properly
+    - No Python string escaping headaches
+    - Designers can edit styles.css without touching Python
+    - Analogous to a static resource in Spring Boot's /resources/static/
+    """
+    css_path = Path(__file__).parent / "styles.css"
+    with open(css_path, "r") as f:
+        css = f.read()
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+
+
+
+def render_header() -> None:
+    st.markdown("""
+    <div class="app-header">
+        <div class="wordmark">Smart<span>DocReader</span></div>
+        <div class="tagline">PDF Intelligence Tutor</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ── Upload & processing section ──────────────────────────────────────────────
 
 def render_upload_section() -> None:
-    """Renders the PDF uploader and triggers processing on a new upload."""
+    st.markdown(
+        '<p style="font-family:var(--font-mono);font-size:0.72rem;'
+        'letter-spacing:0.12em;text-transform:uppercase;'
+        'color:var(--text-muted);margin-bottom:0.5rem;">Upload PDF</p>',
+        unsafe_allow_html=True,
+    )
     uploaded_file = st.file_uploader(
-        "Upload a PDF document",
+        label="pdf",
         type=["pdf"],
         help="Upload a single PDF document to analyze",
+        label_visibility="hidden",
     )
 
-    # Only process if a file was just uploaded and we haven't stored it yet
     if uploaded_file is not None and not session.has_document():
         _process_uploaded_pdf(uploaded_file)
 
 
 def _process_uploaded_pdf(uploaded_file) -> None:
-    """Coordinates PDF extraction → LLM init → session storage."""
-    with st.spinner("Processing PDF… This may take a moment."):
+    with st.spinner("Extracting document… analysing structure…"):
         pdf_result = extract_text_from_pdf(uploaded_file)
 
     if not pdf_result.is_success:
@@ -55,27 +89,37 @@ def _process_uploaded_pdf(uploaded_file) -> None:
 
     session.set_document_text(pdf_result.text)
     session.set_llm(llm_result.llm)
-    st.success("✅ PDF processed successfully! You can now ask questions about the paper.")
+    st.success("✅ Document loaded — ask anything below.")
 
 
 # ── Chat section ─────────────────────────────────────────────────────────────
 
 def render_chat_section() -> None:
-    """Renders the full chat interface (sidebar controls, history, input)."""
     _render_sidebar_controls()
     _render_chat_history()
     _render_chat_input()
 
 
 def _render_sidebar_controls() -> None:
-    """Renders sidebar buttons that operate on the current session."""
+    from configuration import DEFAULT_MODEL
     with st.sidebar:
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.markdown('<div class="sidebar-section-title">Model</div>', unsafe_allow_html=True)
+        model_display = DEFAULT_MODEL.replace("ollama/", "")
+        st.markdown(f"""
+        <div class="model-badge">
+            <div class="label">Active</div>
+            <div class="value"><span class="status-dot"></span>{model_display}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="sidebar-section-title">Session</div>', unsafe_allow_html=True)
+        st.markdown("<hr>", unsafe_allow_html=True)
+
+        if st.button("🗑️  Clear Chat", use_container_width=True):
             _handle_clear_chat()
 
 
 def _handle_clear_chat() -> None:
-    """Resets chat history and reinitialises the LLM with a fresh context."""
     llm_result = build_llm(session.get_document_text())
     if llm_result.is_success:
         session.clear_chat(llm_result.llm)
@@ -85,20 +129,17 @@ def _handle_clear_chat() -> None:
 
 
 def _render_chat_history() -> None:
-    """Replays all stored messages as Streamlit chat bubbles."""
     for message in session.get_messages():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
 
 def _render_chat_input() -> None:
-    """Renders the chat input box and handles submission."""
-    if prompt := st.chat_input("Ask a question about the paper…"):
+    if prompt := st.chat_input("Ask a question about the document…"):
         _handle_user_prompt(prompt)
 
 
 def _handle_user_prompt(prompt: str) -> None:
-    """Persists the user turn, calls the LLM, and persists the assistant turn."""
     session.append_message("user", prompt)
 
     with st.chat_message("user"):
@@ -107,12 +148,7 @@ def _handle_user_prompt(prompt: str) -> None:
     with st.chat_message("assistant"):
         placeholder = st.empty()
         response_text, error = query_llm(session.get_llm(), prompt)
-
-        if error:
-            message = f"❌ {error}"
-        else:
-            message = response_text
-
+        message = f"❌ {error}" if error else response_text
         placeholder.markdown(message)
         session.append_message("assistant", message)
 
@@ -120,10 +156,6 @@ def _handle_user_prompt(prompt: str) -> None:
 # ── LLM recovery section ─────────────────────────────────────────────────────
 
 def render_llm_recovery_section() -> None:
-    """
-    Shown when a document is loaded but the LLM is missing (e.g. after an
-    initialisation failure). Lets the user retry without re-uploading.
-    """
     st.error("⚠️ The AI tutor failed to initialize. Please try reinitializing.")
     if st.button("🔄 Reinitialize AI Tutor"):
         llm_result = build_llm(session.get_document_text())
@@ -138,32 +170,31 @@ def render_llm_recovery_section() -> None:
 # ── Welcome / onboarding section ─────────────────────────────────────────────
 
 def render_welcome_section() -> None:
-    """Displayed before any document is uploaded."""
-    st.info("👆 Please upload a PDF research paper to get started!")
     st.markdown("""
-    ### How it works:
-    1. Upload a PDF document
-    2. The AI tutor will read and understand the paper
-    3. Ask questions to understand the paper or PDF document better
-    4. The tutor will guide you step-by-step through the concepts
-
-    ### Features:
-    - 📄 Upload any PDF document
-    - 💬 Chat-style interface for questions
-    - 🎓 Step-by-step learning approach
-    - 🔄 Clear chat to start over
-    """)
+    <div class="welcome-card">
+        <h3>Get started</h3>
+        <ol>
+            <li>Upload any PDF document above</li>
+            <li>Wait a moment while the model reads it</li>
+            <li>Ask questions in plain language</li>
+            <li>Use <em>Clear Chat</em> in the sidebar to reset</li>
+        </ol>
+        <div class="features">
+            <span class="badge">📄 any PDF</span>
+            <span class="badge">💬 conversational</span>
+            <span class="badge">🏠 100% local</span>
+            <span class="badge">🔒 no data leaves your machine</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ── Main entrypoint ──────────────────────────────────────────────────────────
 
 def main() -> None:
-    """
-    Top-level orchestrator. Controls which section is rendered based on
-    the current session state — mirrors a router / dispatcher pattern.
-    """
     configure_page()
-    st.title("📚 PDF Document Tutor")
+    inject_custom_css()
+    render_header()
     session.init_session_state()
 
     render_upload_section()
