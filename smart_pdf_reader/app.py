@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 import session_manager as session
 from pdf_service import extract_text_from_pdf
-from llm_service import build_llm, query_llm
+from llm_service import build_llm, stream_llm
 
 load_dotenv()
 
@@ -147,10 +147,17 @@ def _handle_user_prompt(prompt: str) -> None:
 
     with st.chat_message("assistant"):
         placeholder = st.empty()
-        response_text, error = query_llm(session.get_llm(), prompt)
-        message = f"❌ {error}" if error else response_text
-        placeholder.markdown(message)
-        session.append_message("assistant", message)
+        full_response = ""
+        try:
+            for token in stream_llm(session.get_llm(), prompt):
+                full_response += token
+                placeholder.markdown(full_response + "▌")   # typing cursor
+            placeholder.markdown(full_response)              # final render, no cursor
+        except Exception as e:
+            full_response = f"❌ Error generating response: {str(e)}"
+            placeholder.markdown(full_response)
+
+        session.append_message("assistant", full_response)
 
 
 # ── LLM recovery section ─────────────────────────────────────────────────────
